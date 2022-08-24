@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:cache="http://www.springframework.org/schema/cache"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jee="http://www.springframework.org/schema/jee"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:batch="http://www.springframework.org/schema/batch"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch.xsd
+       http://www.springframework.org/schema/cache  http://www.springframework.org/schema/cache/spring-cache.xsd
+       http://www.springframework.org/schema/jee http://www.springframework.org/schema/spring-jee.xsd
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/spring-beans.xsd 
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/spring-context.xsd
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/spring-aop.xsd
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/spring-tx.xsd ">
+
+	<import resource="jobBatch.xml" />
+	<!-- Proceso Batch -->
+	<batch:job id="procesoBatchQuartz"
+		job-repository="jobRepository">
+		<batch:step id="processoBA">
+			<batch:tasklet task-executor="hilosBatch">
+				<batch:chunk reader="archivoEntradaBatch"
+					writer="customerCompositeItemWriter" commit-interval="2"
+					processor="batchProyectoProcessor">
+				</batch:chunk>
+			</batch:tasklet>
+		</batch:step>
+		<batch:listeners>
+			<batch:listener ref="listenerBatch"></batch:listener>
+		</batch:listeners>
+	</batch:job>
+
+	<bean id="listenerBatch"
+		class="com.proyecto.batchs.proyectouser.ListenerBatchProceso">
+	</bean>
+
+	<context:property-placeholder
+		location="classpath*:META-INF/spring/*.properties" />
+	<context-compoment-scan
+		base_package="com.proyecto.batchs.config,
+										  com.proyecto.batchs.quartz,
+										  com.proyecto.batchs.proyectouser"></context-compoment-scan>
+
+	<context:annotation-congif />
+
+	<jee:jndi-lookup id="dataSource"
+		jndi-name="${jpa.jndi}" resource-ref="true" />
+	<bean
+		class="org.springframework.orm.jpa.JpaTransactionManager"
+		id="transactionManagerPersistence">
+		<property name="entityManagerFactory" value="entityManagerFactory" />
+	</bean>
+	
+	<bean
+		class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean"
+		id="entityManagerFactory">
+		<property name="persistenceUnitName" value="proyectoBatchQ" />
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+</beans>

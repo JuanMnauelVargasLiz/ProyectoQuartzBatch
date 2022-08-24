@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:batch="http://www.springframework.org/schema/batch"
+	xsi:schemaLocation="http://www.springframework.org/schema/batch http://www.springframework.org/schema/batch/spring-batch-3.0.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.1.xsd">
+ 
+ 
+	
+ 
+	<!-- Reader, destacar que se salta la línea de las cabeceras -->
+ 
+	<bean id="archivoEntradaBatch" class="org.springframework.batch.item.file.FlatFileItemReader">
+		<property name="encoding" value="utf8" />
+		<property name="lineMapper" ref="lecturaArchivo" />
+		<property name="linesToSkip" value="0" />
+	</bean> 
+	<!-- Mapeo de cada fila del fichero -->
+ 
+	<bean id="lecturaArchivo" class="org.springframework.batch.item.file.mapping.DefaultLineMapper">
+		<property name="fieldSetMapper" ref="mapeoArchivoEntradaBatch" />
+		<property name="lineTokenizer" ref="delimitadorLectura"/>		
+	</bean>
+ 	<!-- Configuracion de lectura de archivo --> 
+ 	
+	<bean id="delimitadorLectura"
+		class="org.springframework.batch.item.file.transform.DelimitedLineTokenizer">
+		<property name="delimiter" value=";" />
+			<property name="names" value="fila" />
+	</bean>	
+		<!-- Configuracion mapeo de objeto lectura --> 
+		
+	<bean id="mapeoArchivoEntradaBatch"
+		class="org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper">
+		<property name="prototypeBeanName" value="archivoEntradaDat" />
+	</bean>
+		<!-- objeto lectura --> 
+		
+	<bean id="archivoEntradaDat"
+		class="com.proyecto.batchs.batch.ArchivoEntrada" scope="prototype">
+	</bean>
+	<!-- Configuracion de los observadores--> 
+		
+	<bean id="jobRepository"
+		class="org.springframework.batch.core.repository.support.MapJobRepositoryFactoryBean">
+		<property name="transactionManager" value="transactionManager" />
+	</bean>
+		
+	<bean id="transactionManager"
+		class="org.springframework.batch.core.support.transaction.ResourceLessTransactionManager"/>
+		
+	<bean id="jobLauncher"
+		class="org.springframework.batch.core.launch.support.SimpleJobLauncher">
+		<property name="jobRepository" value="jobRepository" />
+	</bean>	
+	<!-- Hilos--> 
+		
+	<bean id="hilosBatch"
+		class="org.springframework.core.task.SimpleAsynctaskExecutor">
+		<property name="concurrencyLimit" value="1" />
+	</bean>
+ 
+ 
+</beans>
